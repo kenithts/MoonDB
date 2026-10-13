@@ -126,12 +126,15 @@ mantenha-os em sincronia com os scripts.
 
 ## GitHub Pages — regras obrigatórias
 
-- O site é servido em subcaminho (`https://<user>.github.io/MoonDB/`). Configure `base` no
-  `vite.config.ts` e **nunca** use caminhos absolutos fixos como `/data/cards.json`:
+- Site: **https://kenithts.github.io/MoonDB/** (GitHub Pages gratuito, repo público
+  `kenithts/MoonDB`). O `base` do `vite.config.ts` é `/MoonDB/` no build e no `vite preview` e `/`
+  no dev. **Nunca** use caminhos absolutos fixos como `/data/cards.json`:
   use `` `${import.meta.env.BASE_URL}data/cards.json` `` (o mesmo vale para imagens em `public/`).
 - Pages não tem fallback de SPA: use `HashRouter` (ou `createHashRouter`) para que links diretos
   e refresh funcionem.
-- Deploy via GitHub Actions (build + upload de `dist/`). `dist/` está no `.gitignore`.
+- Deploy: `.github/workflows/deploy.yml` faz build e publica a cada push na `main` (ou manual pela
+  aba Actions). Requer Settings > Pages > Source = "GitHub Actions". `dist/` está no `.gitignore`.
+- Para testar como no Pages: `npm run build && npm run preview` -> http://localhost:4173/MoonDB/.
 - Fique atento ao tamanho de `public/`: JSONs grandes devem ser divididos ou carregados sob demanda.
 
 ## Estado atual
@@ -154,8 +157,8 @@ mantenha-os em sincronia com os scripts.
     limites calculada dos dados (`pieceLimits` em `src/lib/automatic.ts`).
   - Busca: nome, ID, aegis, nome KR, descrição (+ prefixo/tipo); sem acento/caixa; todos os termos.
 - Tema escuro "lua" fixo (`class="dark"` no `index.html`, tokens em `.dark` no `src/index.css`).
-- Pendente: demais tipos de item e seções (monstros, skills, classes 4ª),
-  `base` + HashRouter + workflow de deploy, repositório git (ainda não inicializado).
+- Pendente: demais tipos de item e seções (monstros, skills, classes 4ª); HashRouter quando houver
+  rotas (hoje as abas não mudam a URL). Repositório: https://github.com/kenithts/MoonDB (branch `main`).
 
 ## Convenções
 
