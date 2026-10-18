@@ -9,7 +9,7 @@ export function EquipImage({
   className,
   lazy,
 }: {
-  item: { id: number; image?: 'collection' | 'icon' }
+  item: { id: number; image?: 'collection' | 'icon' | null }
   className?: string
   lazy?: boolean
 }) {

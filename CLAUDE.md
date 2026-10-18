@@ -24,6 +24,8 @@ python scripts/build_cards.py               # public/data/cards.json + public/im
 python scripts/build_equips.py              # public/data/equips.json + public/img/items/*.webp
 python scripts/build_class_enchants.py      # public/data/class_enchants.json + public/img/items/*.webp
 python scripts/build_automatic.py           # public/data/automatic.json + public/img/items/*.webp
+python scripts/build_gray_wolf.py           # public/data/gray_wolf.json + public/img/items/*.webp
+python scripts/build_cheffenia.py           # public/data/cheffenia.json (sem imagens)
 python scripts/build_<x>.py --no-images     # só o JSON (imagens existentes nunca são reextraídas)
 ```
 
@@ -80,6 +82,16 @@ O kenithRO é o projeto de servidor do usuário; aqui ele serve **só como fonte
   Legendary/Epic I-III), peças aceitas + máximo de cópias e o mapeamento módulo (Etc) -> Orb (Card,
   `310082 + índice`) **não estão no item_db**: vêm do NPC `npc/re/merchants/enchan_sage_legacy_17_2.txt`
   e estão espelhados no topo do script. Se o rAthena atualizar o NPC, atualize as tabelas.
+- `build_gray_wolf.py` — Wolf Orbs dos equipamentos Gray Wolf (Ep 18). Tudo vem do
+  `db/re/item_enchant.yml` (ids 1-5 = NPC Emmet em `quests_18.txt`; 137-141 = mesmo menu com Special
+  Amethyst Fragment, que nenhum NPC do rAthena abre): custo por encantamento (zeny + Amethyst
+  Fragment), ordem dos slots, peso de sorteio (`Chance`/soma = %), escolha direta (`PerfectEnchants`) e
+  reset. Preço das peças vem das lojas barter `barter_ep18_1..3`. JSON é um objeto
+  (`amethyst`, `special`, `pieces`, `shop`, `enchants`), não uma lista.
+- `build_cheffenia.py` — monstros de Cheffenia por dificuldade (Easy/Hard/Nightmare/Hallucination).
+  As listas são **curadas pelo usuário** (tabela `DIFFICULTIES` no topo do script, nome exibido ->
+  id do monstro original no `mob_db.yml`; `None` = sem dados no rAthena). Elemento/raça/tamanho/nível
+  vêm do mob_db; HP fixo em 1.000.000 (pedido do usuário). Inclui a tabela `attr_fix.yml`.
 - `lib/grf.py` — leitor de GRF 0x200 com decriptação DES (port do `grfio.cpp` do rAthena).
 - `lib/lub64.py` — converte bytecode Lua 32-bit -> 64-bit para carregar com `lupa`.
 
@@ -156,6 +168,12 @@ mantenha-os em sincronia com os scripts.
     raridade; quadro explicativo (`intro` do `BrowseLayout`) com regras do NPC Lisa e tabela de
     limites calculada dos dados (`pieceLimits` em `src/lib/automatic.ts`).
   - Busca: nome, ID, aegis, nome KR, descrição (+ prefixo/tipo); sem acento/caixa; todos os termos.
+  - **Gray Wolf** (`src/components/gray-wolf/`, `src/lib/gray-wolf.ts`): filtros "Onde equipa",
+    "Encantamento" (1º/2º/3º = slot 4/3/2) e "Como obter" (sorteio/escolha/Special); quadro com regras
+    do NPC Emmet, tabela de custos em ametista e loja; modal com a chance do orb por peça/posição.
+  - **Cheffenia** (`src/components/cheffenia/`, `src/lib/cheffenia.ts`): seletor de dificuldade, cards
+    com elemento, HP, raça/tamanho e o elemento que mais causa dano; filtro de elementos de ataque
+    (múltipla escolha) mostra a % de dano por monstro em barras (escala até 200%), com opção de ordenar.
 - Tema escuro "lua" fixo (`class="dark"` no `index.html`, tokens em `.dark` no `src/index.css`).
 - Pendente: demais tipos de item e seções (monstros, skills, classes 4ª); HashRouter quando houver
   rotas (hoje as abas não mudam a URL). Repositório: https://github.com/kenithts/MoonDB (branch `main`).

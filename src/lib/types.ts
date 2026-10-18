@@ -140,3 +140,101 @@ export interface AutomaticModule extends BaseItem {
   pieces: { piece: AutomaticPiece; max: number; equipment: { id: number; name: string }[] }[]
   image?: 'collection' | 'icon'
 }
+
+export type GrayWolfPiece = 'Armor' | 'Garment' | 'Shoes' | 'AccR' | 'AccL'
+
+export interface ZenyAmethyst {
+  zeny: number
+  amethyst: number
+}
+
+export interface ItemRef {
+  id: number
+  name: string
+  image?: 'collection' | 'icon' | null
+}
+
+/** Onde um Wolf Orb pode sair: peça + ordem do encantamento (1º = slot 4, 2º = slot 3, 3º = slot 2). */
+export interface GrayWolfOption {
+  piece: GrayWolfPiece
+  step: number
+  /** % no sorteio do encantamento comum; ausente = não sai no sorteio. */
+  chance?: number
+  /** Escolha direta (encantamento "perfeito") pagando zeny + Amethyst Fragment. */
+  perfect?: ZenyAmethyst
+  /** Escolha direta com Special Amethyst Fragment (quantidade). */
+  special?: number
+}
+
+/** Wolf Orb (Card/Enchant) de public/data/gray_wolf.json. */
+export interface GrayWolfEnchant extends BaseItem {
+  script?: string
+  options: GrayWolfOption[]
+  image?: 'collection' | 'icon'
+}
+
+export interface GrayWolfStep {
+  step: number
+  /** Slot da carta no item (4, 3, 2). */
+  slot: number
+  zeny: number
+  amethyst: number
+  /** % de sucesso da tentativa (100 = nunca falha). */
+  successRate: number
+  /** Quantos orbs entram no sorteio / na escolha direta / na escolha com Special Amethyst. */
+  random: number
+  perfect: number
+  perfectCost: ZenyAmethyst | null
+  special: number
+}
+
+export interface GrayWolfPieceInfo {
+  piece: GrayWolfPiece
+  /** Id do item_enchant.yml aberto pelo NPC. */
+  enchantId: number
+  equipment: ItemRef[]
+  minRefine: number
+  reset: (ZenyAmethyst & { chance: number }) | null
+  steps: GrayWolfStep[]
+}
+
+export interface Fragment extends ItemRef {
+  description: string[]
+  obtainedFrom: BoxSource[]
+}
+
+/** public/data/gray_wolf.json (gerado por scripts/build_gray_wolf.py). */
+export interface GrayWolfData {
+  amethyst: Fragment
+  special: Fragment
+  pieces: GrayWolfPieceInfo[]
+  /** Lojas (barter) da vila que aceitam Amethyst Fragment. */
+  shop: (ItemRef & { amethyst: number })[]
+  enchants: GrayWolfEnchant[]
+}
+
+export type Element = 'Neutral' | 'Water' | 'Earth' | 'Fire' | 'Wind' | 'Poison' | 'Holy' | 'Dark' | 'Ghost' | 'Undead'
+export type Difficulty = 'easy' | 'hard' | 'nightmare' | 'hallucination'
+
+/** Monstro de uma dificuldade de Cheffenia; sem `id` = o rAthena não tem dados dele. */
+export interface CheffeniaMob {
+  name: string
+  hp: number
+  id?: number
+  rathenaName?: string
+  level?: number
+  element?: Element
+  elementLevel?: number
+  race?: string
+  size?: string
+  mvp?: boolean
+  /** 'game' = dados lidos no jogo pelo usuário (o rAthena não tem o monstro). */
+  source?: 'game'
+}
+
+/** public/data/cheffenia.json (gerado por scripts/build_cheffenia.py). */
+export interface CheffeniaData {
+  difficulties: Record<Difficulty, CheffeniaMob[]>
+  /** Nível do elemento do alvo -> elemento do ataque -> elemento do alvo -> % de dano (attr_fix.yml). */
+  attr: Record<string, Record<Element, Record<Element, number>>>
+}

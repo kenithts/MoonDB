@@ -132,6 +132,7 @@ export function ItemDetailDialog({
   scripts,
   children,
   afterEffect,
+  hideSources = false,
 }: {
   item: BaseItem | null
   onClose: () => void
@@ -141,6 +142,8 @@ export function ItemDetailDialog({
   children?: ReactNode
   /** Conteúdo exibido logo após as abas Descrição/Script (ex.: combos). */
   afterEffect?: ReactNode
+  /** Esconde "Dropado por"/caixas (itens que só existem como encantamento). */
+  hideSources?: boolean
 }) {
   return (
     <Dialog open={item !== null} onOpenChange={(open) => !open && onClose()}>
@@ -172,18 +175,22 @@ export function ItemDetailDialog({
             </div>
           </div>
 
-          <Separator />
+          {!hideSources && (
+            <>
+              <Separator />
 
-          <div className="flex flex-col gap-5 p-5">
-            <DetailSection title={`Dropado por (${item.droppedBy.length})`}>
-              <DropList drops={item.droppedBy} />
-            </DetailSection>
-            {item.obtainedFrom.length > 0 && (
-              <DetailSection title={`Obtido em caixas e álbuns (${item.obtainedFrom.length})`}>
-                <BoxList sources={item.obtainedFrom} />
-              </DetailSection>
-            )}
-          </div>
+              <div className="flex flex-col gap-5 p-5">
+                <DetailSection title={`Dropado por (${item.droppedBy.length})`}>
+                  <DropList drops={item.droppedBy} />
+                </DetailSection>
+                {item.obtainedFrom.length > 0 && (
+                  <DetailSection title={`Obtido em caixas e álbuns (${item.obtainedFrom.length})`}>
+                    <BoxList sources={item.obtainedFrom} />
+                  </DetailSection>
+                )}
+              </div>
+            </>
+          )}
         </DialogContent>
       )}
     </Dialog>

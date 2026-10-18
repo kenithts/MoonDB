@@ -1,10 +1,12 @@
-import { Cpu, Layers, Moon, Swords, WandSparkles } from 'lucide-react'
+import { Cpu, Layers, Moon, PawPrint, Skull, Swords, WandSparkles } from 'lucide-react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AutomaticTab } from '@/components/automatic/automatic-tab'
 import { CardsTab } from '@/components/cards/cards-tab'
+import { CheffeniaTab } from '@/components/cheffenia/cheffenia-tab'
 import { ClassEnchantsTab } from '@/components/class-enchants/class-enchants-tab'
 import { EquipsTab } from '@/components/equips/equips-tab'
+import { GrayWolfTab } from '@/components/gray-wolf/gray-wolf-tab'
 
 function App() {
   return (
@@ -44,6 +46,14 @@ function App() {
               <Cpu />
               Automatic Armor
             </TabsTrigger>
+            <TabsTrigger value="gray-wolf" className="flex-none px-3 text-sm">
+              <PawPrint />
+              Gray Wolf
+            </TabsTrigger>
+            <TabsTrigger value="cheffenia" className="flex-none px-3 text-sm">
+              <Skull />
+              Cheffenia
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="cards">
             <CardsTab />
@@ -56,6 +66,12 @@ function App() {
           </TabsContent>
           <TabsContent value="automatic">
             <AutomaticTab />
+          </TabsContent>
+          <TabsContent value="gray-wolf">
+            <GrayWolfTab />
+          </TabsContent>
+          <TabsContent value="cheffenia">
+            <CheffeniaTab />
           </TabsContent>
         </Tabs>
       </main>

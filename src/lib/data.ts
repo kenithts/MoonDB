@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import type { AutomaticModule, CardItem, ClassEnchant, EquipItem } from '@/lib/types'
+import type { AutomaticModule, CardItem, CheffeniaData, ClassEnchant, EquipItem, GrayWolfData } from '@/lib/types'
 
 /** Caminho de um arquivo em public/, respeitando o base do GitHub Pages. */
 export function asset(path: string) {
@@ -57,3 +57,5 @@ export const useCards = () => useJson<CardItem[]>('data/cards.json')
 export const useEquips = () => useJson<EquipItem[]>('data/equips.json')
 export const useClassEnchants = () => useJson<ClassEnchant[]>('data/class_enchants.json')
 export const useAutomatic = () => useJson<AutomaticModule[]>('data/automatic.json')
+export const useGrayWolf = () => useJson<GrayWolfData>('data/gray_wolf.json')
+export const useCheffenia = () => useJson<CheffeniaData>('data/cheffenia.json')
