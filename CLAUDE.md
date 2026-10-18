@@ -25,7 +25,7 @@ python scripts/build_equips.py              # public/data/equips.json + public/i
 python scripts/build_class_enchants.py      # public/data/class_enchants.json + public/img/items/*.webp
 python scripts/build_automatic.py           # public/data/automatic.json + public/img/items/*.webp
 python scripts/build_gray_wolf.py           # public/data/gray_wolf.json + public/img/items/*.webp
-python scripts/build_cheffenia.py           # public/data/cheffenia.json (sem imagens)
+python scripts/build_cheffenia.py           # public/data/cheffenia.json + public/img/mobs/*.webp
 python scripts/build_<x>.py --no-images     # só o JSON (imagens existentes nunca são reextraídas)
 ```
 
@@ -91,7 +91,10 @@ O kenithRO é o projeto de servidor do usuário; aqui ele serve **só como fonte
 - `build_cheffenia.py` — monstros de Cheffenia por dificuldade (Easy/Hard/Nightmare/Hallucination).
   As listas são **curadas pelo usuário** (tabela `DIFFICULTIES` no topo do script, nome exibido ->
   id do monstro original no `mob_db.yml`; `None` = sem dados no rAthena). Elemento/raça/tamanho/nível
-  vêm do mob_db; HP fixo em 1.000.000 (pedido do usuário). Inclui a tabela `attr_fix.yml`.
+  vêm do mob_db; HP fixo em 1.000.000 (pedido do usuário). Inclui a tabela `attr_fix.yml` (renewal).
+  Monstros que o rAthena não tem ficam em `MANUAL` (dados lidos no jogo, `source: 'game'`).
+  Sprite: id -> nome pelo `npcidentity.lub` + `jobname.lub` do data.grf; `lib/sprite.py` compõe a pose
+  parada (ação 0, quadro 0 do .act + .spr) em `public/img/mobs/<id>.webp`.
 - `lib/grf.py` — leitor de GRF 0x200 com decriptação DES (port do `grfio.cpp` do rAthena).
 - `lib/lub64.py` — converte bytecode Lua 32-bit -> 64-bit para carregar com `lupa`.
 
@@ -174,6 +177,11 @@ mantenha-os em sincronia com os scripts.
   - **Cheffenia** (`src/components/cheffenia/`, `src/lib/cheffenia.ts`): seletor de dificuldade, cards
     com elemento, HP, raça/tamanho e o elemento que mais causa dano; filtro de elementos de ataque
     (múltipla escolha) mostra a % de dano por monstro em barras (escala até 200%), com opção de ordenar.
+    "Plano de elementos" (`bestPlans`/`evaluatePlan` em `src/lib/cheffenia.ts`): modo **Recomendado**
+    testa todas as combinações de 1-4 elementos e escolhe a de menor tempo total (soma de 1/% — HP igual),
+    com as 4 alternativas seguintes; modo **Meus elementos** avalia os elementos que o usuário marcar
+    (até 4) e compara com o recomendado de mesma quantidade. Mostra em qual monstro usar cada elemento;
+    cada card também mostra o elemento do plano ativo.
 - Tema escuro "lua" fixo (`class="dark"` no `index.html`, tokens em `.dark` no `src/index.css`).
 - Pendente: demais tipos de item e seções (monstros, skills, classes 4ª); HashRouter quando houver
   rotas (hoje as abas não mudam a URL). Repositório: https://github.com/kenithts/MoonDB (branch `main`).

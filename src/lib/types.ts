@@ -230,6 +230,8 @@ export interface CheffeniaMob {
   mvp?: boolean
   /** 'game' = dados lidos no jogo pelo usuário (o rAthena não tem o monstro). */
   source?: 'game'
+  /** Existe public/img/mobs/<id>.webp (pose parada do sprite do client). */
+  sprite?: boolean
 }
 
 /** public/data/cheffenia.json (gerado por scripts/build_cheffenia.py). */

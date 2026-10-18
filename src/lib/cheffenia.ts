@@ -9,6 +9,10 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 
 export const DIFFICULTIES = Object.keys(DIFFICULTY_LABEL) as Difficulty[]
 
+/** Plano de elementos: o recomendado ou os elementos escolhidos pelo usuário (até MAX_CUSTOM). */
+export type PlanMode = 'best' | 'custom'
+export const MAX_CUSTOM = 4
+
 export const ELEMENT_LABEL: Record<Element, string> = {
   Neutral: 'Neutro',
   Water: 'Água',
@@ -74,4 +78,81 @@ export const TONE_STYLE: Record<ReturnType<typeof rateTone>, { text: string; bar
   weak: { text: 'text-amber-300', bar: 'bg-amber-400', label: 'reduzido' },
   immune: { text: 'text-rose-300', bar: 'bg-rose-400', label: 'imune' },
   heal: { text: 'text-fuchsia-300', bar: 'bg-fuchsia-400', label: 'cura o alvo' },
+}
+
+function combinations<T>(items: T[], k: number): T[][] {
+  if (k === 0) return [[]]
+  if (items.length < k) return []
+  const [first, ...rest] = items
+  return [...combinations(rest, k - 1).map((c) => [first, ...c]), ...combinations(rest, k)]
+}
+
+export interface ElementPlan {
+  elements: Element[]
+  /** Monstro -> elemento a usar e a % de dano com ele. */
+  assignment: Map<CheffeniaMob, { element: Element; rate: number }>
+  /** Monstros que nenhum dos elementos consegue ferir (todos 0% ou cura). */
+  unkillable: CheffeniaMob[]
+  /** Média harmônica da % de dano: o "dano efetivo" considerando o tempo para matar todos. */
+  effectiveRate: number
+  /** Tempo relativo (soma de 1/%), menor é melhor. */
+  cost: number
+}
+
+/** Avalia um conjunto fixo de elementos: em cada monstro, o melhor elemento do conjunto. */
+export function evaluatePlan(data: CheffeniaData, mobs: CheffeniaMob[], combo: Element[]): ElementPlan | null {
+  const valid = mobs.filter((m) => m.element)
+  if (!valid.length || !combo.length) return null
+  // ordem do conjunto: quem é o melhor isolado em mais monstros vem antes (desempate = menos trocas)
+  const wins = new Map<Element, number>(combo.map((e) => [e, 0]))
+  for (const m of valid) {
+    const rates = combo.map((e) => damageRate(data, e, m) ?? 0)
+    const top = Math.max(...rates)
+    combo.forEach((e, i) => rates[i] === top && wins.set(e, wins.get(e)! + 1))
+  }
+  const ordered = [...combo].sort((a, b) => wins.get(b)! - wins.get(a)! || ELEMENTS.indexOf(a) - ELEMENTS.indexOf(b))
+
+  const assignment = new Map<CheffeniaMob, { element: Element; rate: number }>()
+  const unkillable: CheffeniaMob[] = []
+  let cost = 0
+  for (const m of valid) {
+    let pick = ordered[0]
+    let rate = -Infinity
+    for (const e of ordered) {
+      const r = damageRate(data, e, m) ?? 0
+      if (r > rate) {
+        rate = r
+        pick = e
+      }
+    }
+    assignment.set(m, { element: pick, rate })
+    if (rate <= 0) unkillable.push(m)
+    else cost += 1 / rate
+  }
+  const killed = valid.length - unkillable.length
+  return { elements: ordered, assignment, unkillable, cost, effectiveRate: killed ? killed / cost : 0 }
+}
+
+const better = (a: ElementPlan, b: ElementPlan) =>
+  a.unkillable.length - b.unkillable.length || a.cost - b.cost
+
+/**
+ * Melhores conjuntos de `k` elementos de ataque para matar todos os monstros mais rápido: com o mesmo HP,
+ * o tempo de cada um é proporcional a 1 / (% de dano), então minimiza a soma desse tempo usando o melhor
+ * elemento do conjunto em cada monstro. Testa todas as combinações (no máximo 252) e devolve as `top`
+ * melhores, da melhor para a pior. Conjuntos em que um elemento não é usado em nenhum monstro são
+ * descartados (equivalem a um conjunto menor).
+ */
+export function bestPlans(data: CheffeniaData, mobs: CheffeniaMob[], k: number, top = 1): ElementPlan[] {
+  const all: ElementPlan[] = []
+  for (const combo of combinations(ELEMENTS, Math.min(k, ELEMENTS.length))) {
+    const plan = evaluatePlan(data, mobs, combo)
+    if (plan) all.push(plan)
+  }
+  const full = all.filter((p) => new Set([...p.assignment.values()].map((a) => a.element)).size === p.elements.length)
+  return (full.length ? full : all).sort(better).slice(0, top)
+}
+
+export function bestPlan(data: CheffeniaData, mobs: CheffeniaMob[], k: number): ElementPlan | null {
+  return bestPlans(data, mobs, k, 1)[0] ?? null
 }

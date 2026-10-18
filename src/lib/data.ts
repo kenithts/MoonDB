@@ -15,6 +15,10 @@ export function itemImage(id: number) {
   return asset(`img/items/${id}.webp`)
 }
 
+export function mobImage(id: number) {
+  return asset(`img/mobs/${id}.webp`)
+}
+
 export type LoadState<T> =
   | { status: 'loading' }
   | { status: 'error'; error: string }

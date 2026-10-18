@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { ArrowDownWideNarrow, Crown, Heart, Info, Swords, X } from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import { ElementPlan } from '@/components/cheffenia/element-plan'
+import { MobSprite } from '@/components/cheffenia/mob-sprite'
 import {
   DIFFICULTIES,
   DIFFICULTY_LABEL,
@@ -10,6 +12,10 @@ import {
   ELEMENT_STYLE,
   TONE_STYLE,
   bestElements,
+  bestPlan,
+  bestPlans,
+  evaluatePlan,
+  type PlanMode,
   damageRate,
   rateTone,
 } from '@/lib/cheffenia'
@@ -46,12 +52,24 @@ function RateBar({ element, rate }: { element: Element; rate: number }) {
   )
 }
 
-function MobCard({ mob, data, selected }: { mob: CheffeniaMob; data: CheffeniaData; selected: Element[] }) {
+function MobCard({
+  mob,
+  data,
+  selected,
+  use,
+}: {
+  mob: CheffeniaMob
+  data: CheffeniaData
+  selected: Element[]
+  /** Elemento do plano para este monstro. */
+  use?: { element: Element; rate: number }
+}) {
   const best = bestElements(data, mob)
   return (
     <article className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-      <header className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+      <header className="flex items-start gap-3">
+        <MobSprite mob={mob} className="size-20" />
+        <div className="min-w-0 flex-1">
           <h3 className="flex items-center gap-1.5 font-medium">
             {mob.mvp && <Crown className="size-4 shrink-0 text-amber-300" aria-label="MVP" />}
             <span className="truncate">{mob.name}</span>
@@ -65,8 +83,17 @@ function MobCard({ mob, data, selected }: { mob: CheffeniaMob; data: CheffeniaDa
           ) : (
             <p className="text-[11px] text-amber-300/80">Sem dados no rAthena</p>
           )}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {mob.element && <ElementBadge element={mob.element} level={mob.elementLevel} />}
+            {use && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                use
+                <ElementBadge element={use.element} className="ring-2" />
+                <span className={cn('font-mono font-semibold', TONE_STYLE[rateTone(use.rate)].text)}>{use.rate}%</span>
+              </span>
+            )}
+          </div>
         </div>
-        {mob.element && <ElementBadge element={mob.element} level={mob.elementLevel} className="shrink-0" />}
       </header>
 
       <dl className="grid grid-cols-3 gap-2 text-xs">
@@ -119,11 +146,22 @@ function Cheffenia({ data }: { data: CheffeniaData }) {
   const [difficulty, setDifficulty] = useState<Difficulty>('nightmare')
   const [selected, setSelected] = useState<Element[]>([])
   const [sortByDamage, setSortByDamage] = useState(false)
+  const [planCount, setPlanCount] = useState(3)
+  const [planMode, setPlanMode] = useState<PlanMode>('best')
+  const [custom, setCustom] = useState<Element[]>([])
 
   const toggle = (e: Element) =>
     setSelected((cur) => (cur.includes(e) ? cur.filter((x) => x !== e) : ELEMENTS.filter((x) => x === e || cur.includes(x))))
 
   const mobs = useMemo(() => data.difficulties[difficulty] ?? [], [data, difficulty])
+  const alternatives = useMemo(() => bestPlans(data, mobs, planCount, 5), [data, mobs, planCount])
+  const single = useMemo(() => bestPlan(data, mobs, 1), [data, mobs])
+  const customPlan = useMemo(() => evaluatePlan(data, mobs, custom), [data, mobs, custom])
+  const reference = useMemo(
+    () => (custom.length ? bestPlan(data, mobs, custom.length) : null),
+    [data, mobs, custom.length],
+  )
+  const plan = planMode === 'custom' ? customPlan : (alternatives[0] ?? null)
   const shown = useMemo(() => {
     if (!sortByDamage || !selected.length) return mobs
     // ordena pelo melhor % entre os elementos marcados (sem dados vão para o fim)
@@ -153,6 +191,28 @@ function Cheffenia({ data }: { data: CheffeniaData }) {
           ))}
         </div>
       </div>
+
+      {mobs.length > 0 && (
+        <ElementPlan
+          mode={planMode}
+          onMode={(m) => {
+            // ao abrir "meus elementos" sem nada marcado, começa pelo recomendado
+            const seed = alternatives[0]
+            if (m === 'custom' && seed)
+              setCustom((cur) => (cur.length ? cur : ELEMENTS.filter((e) => seed.elements.includes(e))))
+            setPlanMode(m)
+          }}
+          count={planCount}
+          onCount={setPlanCount}
+          custom={custom}
+          onCustom={setCustom}
+          plan={plan}
+          alternatives={alternatives}
+          single={single}
+          reference={reference}
+          total={mobs.filter((m) => m.element).length}
+        />
+      )}
 
       {/* filtro de elementos */}
       <section className="flex flex-col gap-2.5 rounded-xl bg-primary/5 p-4 ring-1 ring-primary/20">
@@ -222,7 +282,7 @@ function Cheffenia({ data }: { data: CheffeniaData }) {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {shown.map((m) => (
-            <MobCard key={m.name} mob={m} data={data} selected={selected} />
+            <MobCard key={m.name} mob={m} data={data} selected={selected} use={plan?.assignment.get(m)} />
           ))}
         </div>
       )}
